@@ -1,61 +1,101 @@
-# Portfolio ADOMV
+# Portfolio — Adam Omv
 
-Architecture prevue pour faire cohabiter deux projets distincts sur le meme domaine:
+Personal portfolio website built with React and Node.js, featuring a public showcase and a private admin back-office to manage content dynamically.
 
-- `adomv.com` -> portfolio React/Tailwind servi a la racine
-- `adomv.com/api` -> API Node.js / MySQL du portfolio
-- `adomv.com/uploads` -> fichiers medias du portfolio
-- `adomv.com/undercover` -> projet existant separe, non fusionne
+**Live:** [adomv.com](https://adomv.com)
 
-## Structure
+---
 
-- `frontend/` : application React publique + back-office `/admin`
-- `backend/` : API REST Express + auth JWT + uploads + MySQL
-- `docker-compose.yml` : stack Docker complete
-- `deploy/nginx.portfolio_adomv.conf` : reverse proxy hote pour faire cohabiter le portfolio Dockerise avec `/undercover`
+## Overview
 
-## Lancement Docker
+The site is split into two parts:
 
-1. Copier `.env.docker.example` vers `.env`
-2. Renseigner au minimum `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `JWT_SECRET`, `ADMIN_*`
-3. Lancer:
+- **Public front page** — presents projects, skills, and a contact section
+- **Admin back-office** (`/admin`) — protected by JWT authentication, allows managing portfolio content without touching the code
+
+A built-in timer page (`/minuteur`) is also included as a side utility.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, Tailwind CSS, React Router |
+| Backend | Node.js, Express, JWT auth |
+| Database | MySQL |
+| Infrastructure | Docker, Nginx reverse proxy |
+
+---
+
+## Architecture
+
+```
+adomv.com/          → React frontend (public portfolio + /admin)
+adomv.com/api/      → Express REST API
+adomv.com/uploads/  → Media files served by the backend
+```
+
+```
+portfolio_adomv/
+├── frontend/       # React app (public pages + admin dashboard)
+├── backend/        # Express API + JWT auth + file uploads + MySQL migrations
+├── deploy/         # Nginx host config (reverse proxy)
+└── docker-compose.yml
+```
+
+---
+
+## Running with Docker
 
 ```bash
+# 1. Copy the example env file
+cp .env.docker.example .env
+
+# 2. Fill in the required values
+#    DB_PASSWORD, DB_ROOT_PASSWORD, JWT_SECRET, ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD
+
+# 3. Start the stack
 docker compose up --build -d
 ```
 
-Le stack demarre:
+Services started:
+- Frontend → `http://localhost:8081`
+- Backend → proxied through the frontend container
+- MySQL → persistent Docker volume
 
-- `frontend` sur `http://localhost:8081`
-- `backend` derriere le proxy du frontend
-- `mysql` en conteneur avec volume persistant
+Database migrations and the first admin account are created automatically on backend startup.
 
-Les migrations sont lancees automatiquement au demarrage du backend.
-Le premier compte admin est cree automatiquement si `ADMIN_USERNAME`, `ADMIN_EMAIL` et `ADMIN_PASSWORD` sont definis.
+---
 
-## Commandes utiles
-
-```bash
-docker compose logs -f
-docker compose ps
-docker compose down
-```
-
-## Lancement hors Docker
-
-Le mode manuel reste possible si besoin:
+## Running without Docker
 
 ```bash
 cd backend
 npm install
 npm run migrate
-npm run create-admin -- admin admin@adomv.com your_secure_password
+npm run create-admin -- admin admin@adomv.com your_password
 npm run dev
 ```
 
-## Notes de deploiement
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- Le portfolio reste un projet autonome.
-- Le projet `undercover_weydu` reste autonome et est monte sous `/undercover`.
-- Le reverse proxy Nginx du serveur hote arbitre uniquement les prefixes d'URL; il ne fusionne pas les builds.
-- Dans cette version Docker, Nginx hote envoie `/` vers `127.0.0.1:8081` et `/undercover/` vers `127.0.0.1:8080`.
+---
+
+## Useful commands
+
+```bash
+docker compose logs -f    # stream logs
+docker compose ps         # check container status
+docker compose down       # stop the stack
+```
+
+---
+
+## License
+
+This project is personal and not open for contributions, but feel free to browse the code for inspiration.
